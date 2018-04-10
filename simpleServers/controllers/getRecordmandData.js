@@ -4,32 +4,20 @@
 'use strict'
 var mysql = require("mysql")
 const util = require("util")
+const DatabaseUtil = require("../util/DatabaseExtractDataUtils")
 const CommonHelpFun = require("../util/commonHelpFun")
 var allData = [];
 const PAGE = "page";
 const AUTHEN = "authen";
 const ACCOUNT_ID = "account_id";
 const reflash_page_count = 300;
-var connection = mysql.createConnection({
-    user: "ldy",
-    password: "abcd1234",
-    database: "spider"
-});
-connection.connect();
 
-function updateData() {
+async function updateData() {
     var selectSql = `select * from toutiao_news  order by behot_time desc limit %s;`;
     selectSql = util.format(selectSql, reflash_page_count + "")
-    connection.query(selectSql, function (err, result) {
-        if (err) {
-            console.log(err)
-            return;
-        }
-        allData = []
-        for (let tmp of result) {
-            allData.push(tmp)
-        }
-        console.log("all result length is " + allData.length)
+    DatabaseUtil.findNewsData(selectSql).then(function (data) {
+        allData = data
+        console.log("all result data length is %d,and recommand data init",allData.length )
     })
 
 }

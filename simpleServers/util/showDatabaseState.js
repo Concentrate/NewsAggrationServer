@@ -25,7 +25,6 @@ router.get("/*", async (ctx, next) => {
         })
         connect.connect()
         const exSql = `select count(*) from toutiao_news;`
-
         return new Promise(function (res, rej) {
             connect.query(exSql, function (err, result) {
                 if (err) {

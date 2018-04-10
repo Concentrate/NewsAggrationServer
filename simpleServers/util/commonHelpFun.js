@@ -8,6 +8,7 @@ function IsNum(s) {
     return false;
 }
 
+
 module.exports={
     isNum:IsNum
 }

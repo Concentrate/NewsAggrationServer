@@ -5,13 +5,8 @@
 const mysql = require("mysql")
 const util = require("util")
 const commonUtil = require("../util/commonHelpFun")
+const DatabaseUtil = require("../util/DatabaseExtractDataUtils")
 
-
-const connection = mysql.createConnection({
-    user: "ldy",
-    password: "abcd1234",
-    database: "spider"
-})
 const PAGE = "page";
 const AUTHEN = "authen";
 const ACCOUNT_ID = "account_id";
@@ -19,29 +14,28 @@ const ReflashCount = 300;
 var categoryCacheData = {}
 const reflash_gap = 60 * 1000;
 const CATEGORY = "category"
-connection.connect()
-var categorys = ["news", "news_tech", "news_society", "news_entertainment", "news_story"]
+var categoriesNews = ["news", "news_tech", "news_society", "news_entertainment", "news_story", "news_essay", "news_travel", "news_sports"
+,"video_movie","video_music"]
 function updateData() {
-    for (let category of categorys) {
+    var aSet=new Set(categoriesNews)
+    for (let category of aSet) {
         const tmpStr = "select * from toutiao_news where tag='%s' order by behot_time desc limit %d;"
         var selectSql = util.format(tmpStr, category, ReflashCount)
-        console.log(selectSql)
-        connection.query(selectSql, function (err, res) {
-            if (err) {
-                console.log(err)
-                return;
+        DatabaseUtil.findNewsData(selectSql).then(function (data) {
+            if(!data||data.length==0){
+                categoriesNews.pop(category)
+            }else{
+                categoryCacheData[category] = data;
             }
-            categoryCacheData[category] = []
-            for (let a1 of res) {
-                categoryCacheData[category].push(a1)
-            }
-            console.log("%s is init ", category)
+            console.log(category + " is init and the length of it is " + data.length);
+
+        }).catch(function (err) {
+            categoriesNews.pop(category)
         })
     }
 }
 
 setInterval(updateData, reflash_gap)
-
 async function getCategoryNewsData(ctx, next) {
     ctx.type = "application/json"
     var response = {}
@@ -54,16 +48,15 @@ async function getCategoryNewsData(ctx, next) {
             page = parseInt(tmp)
         }
         var data;
-        if (categorys.indexOf(cate) != -1) {
-            data = categoryCacheData[cate]
-        } else {
-            data = categoryCacheData["news"]
-        }
+        data = categoryCacheData[cate]
         response["status"] = "ok"
         if (data && (page + 1) * 10 < data.length) {
             response["data"] = data.slice(page * 10, (page + 1) * 10)
         } else {
             response["data"] = {}
+        }
+        if (categoriesNews.indexOf(cate) == -1) {
+            categoriesNews.push(cate)
         }
     } else {
         response["status"] = "error"
