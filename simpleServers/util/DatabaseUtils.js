@@ -103,6 +103,25 @@ function mongoDbFindGetPromise(dbase, findObj) {
         })
     })
 }
+async function mongoDbFindPromise(findObj) {
+    var db = await getMongoDbConnect()
+    var result = await mongoDbFindGetPromise(db, findObj)
+    db.close()
+    return result
+}
+
+function getMongoDbConnect() {
+    return new Promise(function (res, rej) {
+        Mongodb.connect(function (err, db) {
+            if (err) {
+                // console.log(err)
+                rej(err)
+                return
+            }
+            res(db)
+        })
+    })
+}
 function mongoDbInsertItem(dbco, insertObj) {
     return new Promise((resolve, reject) => {
         dbco.collection(CommonHelpUtil.MongodbRecommendStatusFields.recomend_collection).insertOne(insertObj, function (err, result) {
@@ -146,6 +165,7 @@ function updateRecomendStatis(newsItemList) {
         const keywords_title = CommonHelpUtil.MongodbRecommendStatusFields.title_keywords
         const all_keyword_ranking = CommonHelpUtil.MongodbRecommendStatusFields.all_keyword_ranking
         const user_id = CommonHelpUtil.MongodbRecommendStatusFields.user_id;
+
         function createNewInsertItem(news_item) {
             var recomendItem = {}
             recomendItem[user_id] = news_item[user_id]
@@ -241,5 +261,6 @@ function updateRecomendStatis(newsItemList) {
 
 module.exports = {
     "findNewsData": findNewsData,
-    "updateRecomendStatis": updateRecomendStatis
+    "updateRecomendStatis": updateRecomendStatis,
+    mongoDbFindPromise: mongoDbFindPromise
 }
