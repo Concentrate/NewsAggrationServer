@@ -11,7 +11,7 @@ const REFLASH_GAP = 3 * 1000;
 const AUTHEN = "authen";
 const ACCOUNT_ID = "account_id";
 const NEWS_ID = "news_id"
-
+var simpleFilter = new Set()
 async function reflashRecommendStatus(account_id, item_id) {
     var selectNewsItem = "select * from toutiao_news where item_id=%s"
     var selectLabelSql = "select label from toutiao_news_labels where id=%s"
@@ -23,11 +23,11 @@ async function reflashRecommendStatus(account_id, item_id) {
     if (newsItem && newsItem[0]) {
         var tmp = newsItem[0]
         // console.log(labelList)
-        var labelArray=[]
-        labelList.forEach((c1)=>{
-          labelArray.push(c1["label"])
+        var labelArray = []
+        labelList.forEach((c1) => {
+            labelArray.push(c1["label"])
         })
-        tmp[ComonHelpUtil.MySqlNewsDataBaseFields.labels]=labelArray
+        tmp[ComonHelpUtil.MySqlNewsDataBaseFields.labels] = labelArray
         tmp[ComonHelpUtil.MySqlNewsDataBaseFields.user_id] = account_id
         needToUpdateData.push(tmp)
     }
@@ -35,9 +35,9 @@ async function reflashRecommendStatus(account_id, item_id) {
 }
 
 function reflashToMongoDb() {
-    if (needToUpdateData&&needToUpdateData.length != 0) {
+    if (needToUpdateData && needToUpdateData.length != 0) {
         DatabaseUtil.updateRecomendStatis(needToUpdateData)
-        needToUpdateData=[]
+        needToUpdateData = []
     }
 }
 setInterval(reflashToMongoDb, REFLASH_GAP)
@@ -46,8 +46,14 @@ async function postUsageStatus(ctx, next) {
     var querys = ctx.query
     var status = {}
     if (querys && querys[ACCOUNT_ID] && querys[NEWS_ID]) {
-        reflashRecommendStatus(querys[ACCOUNT_ID], querys[NEWS_ID])
-        status["status"] = "success"
+        var test = querys[ACCOUNT_ID] + "," + querys[NEWS_ID]
+        if (!simpleFilter.has(test)) {
+            simpleFilter.add(test)
+            reflashRecommendStatus(querys[ACCOUNT_ID], querys[NEWS_ID])
+            status["status"] = "success"
+        } else {
+            status["status"] = "has repeat news report"
+        }
     } else {
         status["status"] = "para wrong"
     }

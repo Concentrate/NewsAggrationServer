@@ -85,7 +85,7 @@ function getUpdateMongoData(tmpList) {
         tmp[CommonHelpUtil.MongodbRecommendStatusFields.title_keywords] = title_key_words
         result.push(tmp)
         console.log("准备更新的数据")
-        console.log(JSON.stringify(result,null,2))
+        console.log(JSON.stringify(result, null, 2))
     }
     return result
 
@@ -131,6 +131,7 @@ function mongoDbUpdateItem(dbco, whereObj, updateObj) {
         })
     })
 }
+/*现在突然觉得mongodb数据库的设计很不常规，很奇怪的感觉...,现在改，*/
 /*更新统计数据*/
 function updateRecomendStatis(newsItemList) {
     Mongodb.connect(mongoUrl, async function (err, db) {
@@ -145,28 +146,35 @@ function updateRecomendStatis(newsItemList) {
         const keywords_title = CommonHelpUtil.MongodbRecommendStatusFields.title_keywords
         const all_keyword_ranking = CommonHelpUtil.MongodbRecommendStatusFields.all_keyword_ranking
         const user_id = CommonHelpUtil.MongodbRecommendStatusFields.user_id;
-
         function createNewInsertItem(news_item) {
             var recomendItem = {}
             recomendItem[user_id] = news_item[user_id]
-            recomendItem[labels] = {}
+            recomendItem[labels] = []
             for (let label of news_item[labels]) {
-                recomendItem[labels][label] = 1;//每个label 次数刚开始为1
-
+                var t1 = {}
+                t1["name"] = label
+                t1["count"] = 1
+                recomendItem[labels].push(t1)
             }
-            recomendItem[tags] = {}
-            recomendItem[tags][news_item[tags]] = 1
+            recomendItem[tags] = []
+            var t2 = {}
+            t2["name"] = tags
+            t2["count"] = 1
+            recomendItem[tags].push(t2)
             recomendItem[news_ids] = []
             recomendItem[news_ids].push(news_item[news_ids])
-            recomendItem[source] = {}
-            recomendItem[source][news_item[source]] = 1
-            recomendItem[keywords_title] = {}
+            recomendItem[source] = []
+            var t3 = {name: news_item[source], count: 1}
+            recomendItem[source].push(t3)
+            recomendItem[keywords_title] = []
             var str1 = JSON.stringify(news_item[keywords_title].sort())
-            recomendItem[keywords_title][str1] = 1
-            recomendItem[all_keyword_ranking] = {}
+            var t4 = {name: str1, count: 1}
+            recomendItem[keywords_title].push(t4)
+            recomendItem[all_keyword_ranking] = []
             const ranking_title_keywords = news_item[keywords_title]
             for (let keyword of ranking_title_keywords) {
-                recomendItem[all_keyword_ranking][keyword] = 1;
+                var t5 = {name: keyword, count: 1}
+                recomendItem[all_keyword_ranking].push(t5)
             }
 
             console.log(recomendItem)
@@ -174,37 +182,40 @@ function updateRecomendStatis(newsItemList) {
         }
 
         function updateExistItemStatus(beforeItem, news_items) {
-
-            function ifExistAddOneOrSetOne(key, value) {
-                if (beforeItem[key][value]) {
-                    var num = beforeItem[key][value]
-                    num = parseInt(num)
-                    beforeItem[key][value] = ++num;
-                } else {
-                    beforeItem[key][value] = 1
+            function addArrayElementCountOrAppend(elements, value) {
+                var isHave = false
+                elements.forEach(ele => {
+                    if (ele["name"] === value) {
+                        ele["count"] = ele["count"] + 1
+                        isHave = true
+                        return
+                    }
+                })
+                if (!isHave) {
+                    elements.push({name: value, count: 1})
                 }
             }
 
-            for (let label of news_items[labels]) {
-                ifExistAddOneOrSetOne(labels, label)
-            }
-
+            news_items[labels].forEach(label => {
+                addArrayElementCountOrAppend(beforeItem[labels], label)
+            })
             var aTag = news_items[tags]
-            ifExistAddOneOrSetOne(tags, aTag)
+            addArrayElementCountOrAppend(beforeItem[tags], aTag)
             var aid = news_items[news_ids]
             beforeItem[news_ids].push(aid)
             var aSource = news_items[source]
-            ifExistAddOneOrSetOne(source, aSource)
+            addArrayElementCountOrAppend(beforeItem[source], aSource)
             var aKeyword_title = news_items[keywords_title]
             if (aKeyword_title) {
                 var str1 = JSON.stringify(aKeyword_title.sort())
-                ifExistAddOneOrSetOne(keywords_title, str1)
+                addArrayElementCountOrAppend(beforeItem[keywords_title], str1)
             }
             for (let keyword of aKeyword_title) {
-                ifExistAddOneOrSetOne(all_keyword_ranking, keyword)
+                addArrayElementCountOrAppend(beforeItem[all_keyword_ranking], keyword)
             }
             console.log("更新后的数据为\n %s", JSON.stringify(beforeItem))
         }
+
 
         var dbase = db.db(CommonHelpUtil.MongodbRecommendStatusFields.mongodb_name)
         var needToUpadteList = getUpdateMongoData(newsItemList)
