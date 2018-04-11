@@ -4,13 +4,14 @@
 'use strict'
 var mysql = require("mysql")
 const util = require("util")
-const DatabaseUtil = require("../util/DatabaseExtractDataUtils")
-const CommonHelpFun = require("../util/commonHelpFun")
+const DatabaseUtil = require("../util/DatabaseUtils")
+const CommonHelpFun = require("../util/CommonHelpUtils")
 var allData = [];
 const PAGE = "page";
 const AUTHEN = "authen";
 const ACCOUNT_ID = "account_id";
 const reflash_page_count = 300;
+const TIME_GAP=30*1000;
 
 async function updateData() {
     var selectSql = `select * from toutiao_news  order by behot_time desc limit %s;`;
@@ -21,8 +22,8 @@ async function updateData() {
     })
 
 }
-setInterval(updateData, 30 * 1000)
-
+// setInterval(updateData, TIME_GAP)
+updateData()
 async function getRecomendData(ctx, next) {
     console.log("开始处理请求连接为 " + ctx.url)
     ctx.type = "application/json";

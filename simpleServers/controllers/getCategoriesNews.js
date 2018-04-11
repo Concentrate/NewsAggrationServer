@@ -4,8 +4,8 @@
 'use strict'
 const mysql = require("mysql")
 const util = require("util")
-const commonUtil = require("../util/commonHelpFun")
-const DatabaseUtil = require("../util/DatabaseExtractDataUtils")
+const commonUtil = require("../util/CommonHelpUtils")
+const DatabaseUtil = require("../util/DatabaseUtils")
 
 const PAGE = "page";
 const AUTHEN = "authen";
@@ -35,7 +35,8 @@ function updateData() {
     }
 }
 
-setInterval(updateData, reflash_gap)
+// setInterval(updateData, reflash_gap)
+updateData()
 async function getCategoryNewsData(ctx, next) {
     ctx.type = "application/json"
     var response = {}
