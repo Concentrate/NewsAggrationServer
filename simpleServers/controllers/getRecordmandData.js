@@ -43,10 +43,11 @@ async function getRecomendData(ctx, next) {
         user_id = querys[ACCOUNT_ID]
     }
     response["status"] = "ok"
-    var recommendDatas;
+    var recommendDatas=[];
     if (user_id) {
         recommendDatas = RecommendDataHelper.getRecommondData({user_id: user_id, timestamp: new Date().getTime()})
     }
+    console.log("展示给用户的数据，推荐数据数量为%d",recommendDatas.length)
     var resultData = []
     if (recommendDatas && recommendDatas.length > 0) {
         recommendDatas.forEach(item => {
