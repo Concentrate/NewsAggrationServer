@@ -12,6 +12,7 @@ const AUTHEN = "authen";
 const ACCOUNT_ID = "account_id";
 const NEWS_ID = "news_id"
 var simpleFilter = new Set()
+const isAllowUseRepeatStatus = true //是否可允许重复收集相同的数据，为测试效果允许
 async function reflashRecommendStatus(account_id, item_id) {
     var selectNewsItem = "select * from toutiao_news where item_id=%s"
     var selectLabelSql = "select label from toutiao_news_labels where id=%s"
@@ -49,7 +50,7 @@ async function postUsageStatus(ctx, next) {
     var status = {}
     if (querys && querys[ACCOUNT_ID] && querys[NEWS_ID]) {
         var test = querys[ACCOUNT_ID] + "," + querys[NEWS_ID]
-        if (!simpleFilter.has(test)) {
+        if (isAllowUseRepeatStatus || !simpleFilter.has(test)) {
             simpleFilter.add(test)
             reflashRecommendStatus(querys[ACCOUNT_ID], querys[NEWS_ID])
             status["status"] = "success"
@@ -61,7 +62,7 @@ async function postUsageStatus(ctx, next) {
     }
     ctx.type = "application/json"
     ctx.body = status
-    await next()
+    await  next()
 }
 module.exports = {
     "get /news/recommend_status": postUsageStatus
