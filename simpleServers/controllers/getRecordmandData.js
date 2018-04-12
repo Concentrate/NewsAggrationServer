@@ -61,7 +61,7 @@ async function getRecomendData(ctx, next) {
             })
         }
     } else {
-        resultData = resultData.splice(0, every_page_num)
+        resultData = resultData.slice(0, every_page_num)
     }
     response["data"] = resultData
     ctx.body = response

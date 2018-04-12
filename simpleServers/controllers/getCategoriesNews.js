@@ -8,9 +8,9 @@ const commonUtil = require("../util/CommonHelpUtils")
 const DatabaseUtil = require("../util/DatabaseUtils")
 
 const PAGE = "page";
-const ReflashCount = 300;
+const allNewestDataReflashCount = 100;
 var categoryCacheData = {}
-const reflash_gap = 5*60 * 1000;
+const reflash_gap = 3*60 * 1000;
 const CATEGORY = "category"
 var categoriesNews = ["news", "news_tech", "news_society", "news_entertainment", "news_story", "news_essay", "news_travel", "news_sports"
 ,"video_movie","video_music"]
@@ -18,7 +18,7 @@ function updateData() {
     var aSet=new Set(categoriesNews)
     for (let category of aSet) {
         const tmpStr = "select * from toutiao_news where tag='%s' order by behot_time desc limit %d;"
-        var selectSql = util.format(tmpStr, category, ReflashCount)
+        var selectSql = util.format(tmpStr, category, allNewestDataReflashCount)
         DatabaseUtil.findNewsData(selectSql).then(function (data) {
             if(!data||data.length==0){
                 categoriesNews.pop(category)

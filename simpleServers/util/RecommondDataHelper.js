@@ -6,12 +6,13 @@ const DatabaseUtil = require("./DatabaseUtils")
 const CommenHelpUtil = require("./CommonHelpUtils")
 const util = require("util")
 var cacheRecommendData = {}
-const EVERY_RECOMMEND_NUM = 15;
+const EVERY_RECOMMEND_NUM = 10;
 const labels = CommenHelpUtil.MongodbRecommendStatusFields.labels
 const ranking_keywords = CommenHelpUtil.MongodbRecommendStatusFields.all_keyword_ranking
 const tags = CommenHelpUtil.MongodbRecommendStatusFields.tags
-const RE_FLASH_RECOMMEND_DATA_GAP = 5 * 60 * 1000; //推荐数据刷新间隔 ms 2min
-const EXPIRED_RECOMMEND_TIME = 30 * 60 * 1000; //无请求清除过期缓存时间 30min
+const RE_FLASH_RECOMMEND_DATA_GAP = 4 * 60 * 1000; //推荐数据刷新间隔 ms
+const EXPIRED_RECOMMEND_TIME = 20 * 60 * 1000; //无请求清除过期缓存时间 30min
+var isRandomSort = false
 function getRecommondData(id_info) {
     var user_id = id_info["user_id"]
     var timestamp = id_info["timestamp"]
@@ -19,8 +20,14 @@ function getRecommondData(id_info) {
         updateRecommondData(user_id, timestamp)
         return []
     } else if (cacheRecommendData[user_id]) {
-        var res = cacheRecommendData[user_id]["data"].splice(EVERY_RECOMMEND_NUM)
+        var dataArray = []
+        if (!isRandomSort) {
+            isRandomSort = true;
+            randomSort(cacheRecommendData[user_id]["data"], dataArray)
+            cacheRecommendData[user_id]["data"] = dataArray
+        }
         cacheRecommendData["timestamp"] = timestamp;
+        var res = cacheRecommendData[user_id]["data"].splice(EVERY_RECOMMEND_NUM)
         if (!res) {
             updateRecommondData(user_id, timestamp).then(function (res) {
 
@@ -30,6 +37,24 @@ function getRecommondData(id_info) {
         }
     }
 }
+function randomSort(arr, newArr) {
+    // 如果原数组arr的length值等于1时，原数组只有一个值，其键值为0
+    // 同时将这个值push到新数组newArr中
+    if (arr.length == 1) {
+        newArr.push(arr[0]);
+        return newArr; // 相当于递归退出
+    }
+
+    // 在原数组length基础上取出一个随机数
+    var random = Math.ceil(Math.random() * arr.length) - 1;
+    // 将原数组中的随机一个值push到新数组newArr中
+    newArr.push(arr[random]);
+    // 对应删除原数组arr的对应数组项
+    arr.splice(random, 1);
+
+    return randomSort(arr, newArr);
+}
+
 
 function getMostCountKeys(array) {
     array.sort(function (a, b) {
@@ -66,13 +91,14 @@ async function getRecommendAlgrithmnData(userInfo) {
     seleNewsSql = "select * from toutiao_news where tag=\"%s\" order by behot_time desc limit %d"
     await getNewsWithFalaor(mostPopTags, seleNewsSql, limitNum * 4, allResult)
     var seleNewsSql = "select * from toutiao_news where title regexp '.*%s.*' order by behot_time desc limit %d"
-    await getNewsWithFalaor(mostPopKeyWord, seleNewsSql, limitNum, allResult)
+    await getNewsWithFalaor(mostPopKeyWord, seleNewsSql, limitNum * 2, allResult)
     console.log("查找推荐数据库长度为 %d", allResult.length)
     return allResult
 }
 
 
 function updateRecommondData(user_id, timestamp) {
+    isRandomSort = false
     return new Promise(async function (resolve, reject) {
         const USER_ID = CommenHelpUtil.MongodbRecommendStatusFields.user_id
         //一个js很坑的地方 {key:value},直接把key用变量放进去是不行的，key还是识别到那个变量名而不是变量值，idea上面灰色也显示了这个意思
@@ -99,7 +125,7 @@ function updateRecomendDataInterval() {
         var date = new Date().getTime()
         if (date - cacheRecommendData[user_id]["timestamp"] > EXPIRED_RECOMMEND_TIME) {
             delete cacheRecommendData[user_id]
-        } else {
+        } else if (date - cacheRecommendData[user_id]["timestamp"] <= RE_FLASH_RECOMMEND_DATA_GAP) { // 4分钟内请求过，才值得为它刷新推荐数据，不浪费资源
             updateRecommondData(user_id)
         }
     }
