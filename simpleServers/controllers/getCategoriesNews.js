@@ -8,8 +8,6 @@ const commonUtil = require("../util/CommonHelpUtils")
 const DatabaseUtil = require("../util/DatabaseUtils")
 
 const PAGE = "page";
-const AUTHEN = "authen";
-const ACCOUNT_ID = "account_id";
 const ReflashCount = 300;
 var categoryCacheData = {}
 const reflash_gap = 60 * 1000;
@@ -35,8 +33,8 @@ function updateData() {
     }
 }
 
-// setInterval(updateData, reflash_gap)
-updateData()
+setInterval(updateData, reflash_gap)
+// updateData()
 async function getCategoryNewsData(ctx, next) {
     ctx.type = "application/json"
     var response = {}

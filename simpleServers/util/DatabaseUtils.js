@@ -103,18 +103,20 @@ function mongoDbFindGetPromise(dbase, findObj) {
         })
     })
 }
-async function mongoDbFindPromise(findObj) {
+async function mongoDbFindResult(findObj) {
     var db = await getMongoDbConnect()
-    var result = await mongoDbFindGetPromise(db, findObj)
+    var dbase = db.db(CommonHelpUtil.MongodbRecommendStatusFields.mongodb_name)
+    var result = await mongoDbFindGetPromise(dbase, findObj)
     db.close()
+    // async 返回的是promise对象，这个学习了
     return result
 }
 
 function getMongoDbConnect() {
     return new Promise(function (res, rej) {
-        Mongodb.connect(function (err, db) {
+        Mongodb.connect(mongoUrl,function (err, db) {
             if (err) {
-                // console.log(err)
+                console.log(err)
                 rej(err)
                 return
             }
@@ -150,8 +152,6 @@ function mongoDbUpdateItem(dbco, whereObj, updateObj) {
         })
     })
 }
-/*现在突然觉得mongodb数据库的设计很不常规，很奇怪的感觉...,现在改，*/
-/*更新统计数据*/
 function updateRecomendStatis(newsItemList) {
     Mongodb.connect(mongoUrl, async function (err, db) {
         if (err) {
@@ -262,5 +262,5 @@ function updateRecomendStatis(newsItemList) {
 module.exports = {
     "findNewsData": findNewsData,
     "updateRecomendStatis": updateRecomendStatis,
-    mongoDbFindPromise: mongoDbFindPromise
+    mongoDbFindResult: mongoDbFindResult
 }

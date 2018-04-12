@@ -31,11 +31,13 @@ async function reflashRecommendStatus(account_id, item_id) {
         tmp[ComonHelpUtil.MySqlNewsDataBaseFields.user_id] = account_id
         needToUpdateData.push(tmp)
     }
-    // console.log(needToUpdateData)
+    console.log(needToUpdateData)
 }
 
 function reflashToMongoDb() {
     if (needToUpdateData && needToUpdateData.length != 0) {
+        console.log("开始收集更新推荐 ...")
+        console.log(needToUpdateData)
         DatabaseUtil.updateRecomendStatis(needToUpdateData)
         needToUpdateData = []
     }
