@@ -51,7 +51,7 @@ async function getRecomendData(ctx, next) {
     }
     if (resultData.length < every_page_num) {
         var leftNum = every_page_num - resultData.length
-        if (allData && (page + 1) * leftNum < reflash_page_count) {
+        if (allData && (page + 1) * leftNum < allData.length) {
             resultData.push(allData.slice(page * leftNum, page * leftNum + leftNum))
         }
     } else {
