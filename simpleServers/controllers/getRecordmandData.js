@@ -17,9 +17,11 @@ const every_page_num = 20;
 
 async function updateData() {
     var selectSql = `select * from toutiao_news  order by behot_time desc limit %s;`;
+    // 这里选择出来的item_id,和数据库里面的item_id不一致，不知道为什么，group_id倒是一致
     selectSql = util.format(selectSql, reflash_page_count + "")
     DatabaseUtil.findNewsData(selectSql).then(function (data) {
         allData = data
+        // console.log(allData)
         console.log("all result data length is %d", allData.length)
     })
 

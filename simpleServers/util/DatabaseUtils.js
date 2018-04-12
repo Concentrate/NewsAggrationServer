@@ -233,7 +233,7 @@ function updateRecomendStatis(newsItemList) {
             for (let keyword of aKeyword_title) {
                 addArrayElementCountOrAppend(beforeItem[all_keyword_ranking], keyword)
             }
-            console.log("更新后的数据为\n %s", JSON.stringify(beforeItem))
+            // console.log("更新后的数据为\n %s", JSON.stringify(beforeItem))
         }
 
 
