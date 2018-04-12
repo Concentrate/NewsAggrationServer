@@ -29,7 +29,7 @@ function getRecommondData(id_info) {
         cacheRecommendData["timestamp"] = timestamp;
         var res = cacheRecommendData[user_id]["data"].splice(0,EVERY_RECOMMEND_NUM)
         console.log("推荐过后剩下的推荐数据数量为 %d",cacheRecommendData[user_id]["data"].length)
-        if (!res) {
+        if (res.length==0) {
             updateRecommondData(user_id, timestamp).then(function (res) {
 
             })
