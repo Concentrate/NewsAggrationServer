@@ -11,8 +11,8 @@ var allData = [];
 const PAGE = "page";
 const AUTHEN = "authen";
 const ACCOUNT_ID = "account_id";
-const allnews_reflash_page_count = 100;
-const TIME_GAP = 80 * 1000;
+const allnews_reflash_page_count = 50;
+const TIME_GAP = 30 * 1000;
 const every_page_num = 20;
 
 async function updateData() {
