@@ -10,7 +10,7 @@ const DatabaseUtil = require("../util/DatabaseUtils")
 const PAGE = "page";
 const ReflashCount = 300;
 var categoryCacheData = {}
-const reflash_gap = 60 * 1000;
+const reflash_gap = 5*60 * 1000;
 const CATEGORY = "category"
 var categoriesNews = ["news", "news_tech", "news_society", "news_entertainment", "news_story", "news_essay", "news_travel", "news_sports"
 ,"video_movie","video_music"]
