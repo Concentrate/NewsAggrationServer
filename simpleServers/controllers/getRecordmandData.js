@@ -47,7 +47,9 @@ async function getRecomendData(ctx, next) {
     if (user_id) {
         recommendDatas = RecommendDataHelper.getRecommondData({user_id: user_id, timestamp: new Date().getTime()})
     }
+  if(recommendDatas){
     console.log("展示给用户的数据，推荐数据数量为%d",recommendDatas.length)
+    }
     var resultData = []
     if (recommendDatas && recommendDatas.length > 0) {
         recommendDatas.forEach(item => {

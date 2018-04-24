@@ -12,36 +12,35 @@ const ranking_keywords = CommenHelpUtil.MongodbRecommendStatusFields.all_keyword
 const tags = CommenHelpUtil.MongodbRecommendStatusFields.tags
 const RE_FLASH_RECOMMEND_DATA_GAP = 4 * 60 * 1000; //推荐数据刷新间隔 ms
 const EXPIRED_RECOMMEND_TIME = 20 * 60 * 1000; //无请求清除过期缓存时间 30min
-var isRandomSort = false
+var isRandomSortMap={}
 function getRecommondData(id_info) {
     var user_id = id_info["user_id"]
     var timestamp = id_info["timestamp"]
     if (!cacheRecommendData[user_id]) {
         updateRecommondData(user_id, timestamp)
         return []
-    } else if (cacheRecommendData[user_id]) {
+    } else if (cacheRecommendData[user_id]["data"]) {
         var dataArray = []
-        if (!isRandomSort) {
-            isRandomSort = true;
+        if (!isRandomSortMap[user_id]) {
+            isRandomSortMap[user_id] = true;
+            if(cacheRecommendData[user_id]["data"].length>=1){
             randomSort(cacheRecommendData[user_id]["data"], dataArray)
             cacheRecommendData[user_id]["data"] = dataArray
+            }
         }
-        cacheRecommendData["timestamp"] = timestamp;
+        cacheRecommendData[user_id]["timestamp"] = timestamp;
         var res = cacheRecommendData[user_id]["data"].splice(0,EVERY_RECOMMEND_NUM)
         console.log("推荐过后剩下的推荐数据数量为 %d",cacheRecommendData[user_id]["data"].length)
-        if (res.length==0) {
-            updateRecommondData(user_id, timestamp).then(function (res) {
-
-            })
-        } else {
-            return res;
+        if (res&&res.length==0) {
+            updateRecommondData(user_id, timestamp).then()
         }
+        return res;
     }
 }
 function randomSort(arr, newArr) {
     // 如果原数组arr的length值等于1时，原数组只有一个值，其键值为0
     // 同时将这个值push到新数组newArr中
-    if (arr.length == 1) {
+    if (arr.length <= 1) {
         newArr.push(arr[0]);
         return newArr; // 相当于递归退出
     }
@@ -87,11 +86,11 @@ async function getRecommendAlgrithmnData(userInfo) {
     var allResult = []
     const limitNum = 10;
     var selectNews = "select * from toutiao_news_labels as a join toutiao_news as b where a.id=b.item_id and  a.label=\"%s\"" +
-        " order by b.behot_time desc limit %d;"
-    await getNewsWithFalaor(mostPopLabels, selectNews, limitNum * 5, allResult)
+        " limit %d;"
+    await getNewsWithFalaor(mostPopLabels, selectNews, limitNum * 3, allResult)
     seleNewsSql = "select * from toutiao_news where tag=\"%s\" order by behot_time desc limit %d"
-    await getNewsWithFalaor(mostPopTags, seleNewsSql, limitNum * 4, allResult)
-    var seleNewsSql = "select * from toutiao_news where title regexp '.*%s.*' order by behot_time desc limit %d"
+    await getNewsWithFalaor(mostPopTags, seleNewsSql, limitNum * 2, allResult)
+    var seleNewsSql = "select * from toutiao_news where title regexp '.*%s.*' limit %d"
     await getNewsWithFalaor(mostPopKeyWord, seleNewsSql, limitNum * 2, allResult)
     console.log("查找推荐数据库长度为 %d", allResult.length)
     return allResult
@@ -99,7 +98,9 @@ async function getRecommendAlgrithmnData(userInfo) {
 
 
 function updateRecommondData(user_id, timestamp) {
-    isRandomSort = false
+    isRandomSortMap[user_id] = false
+    //频控设置
+    console.log("开始刷新推荐数据...")
     return new Promise(async function (resolve, reject) {
         const USER_ID = CommenHelpUtil.MongodbRecommendStatusFields.user_id
         //一个js很坑的地方 {key:value},直接把key用变量放进去是不行的，key还是识别到那个变量名而不是变量值，idea上面灰色也显示了这个意思
@@ -110,14 +111,15 @@ function updateRecommondData(user_id, timestamp) {
         if (!userInfo || !userInfo[USER_ID]) {
             return
         }
-        var tmpResult = await getRecommendAlgrithmnData(userInfo)
         cacheRecommendData[user_id] = {}
-        if (timestamp) {
-            cacheRecommendData[user_id]["timestamp"] = timestamp
+        if(timestamp){
+        cacheRecommendData[user_id]["timestamp"]=timestamp
         }
+        var tmpResult = await getRecommendAlgrithmnData(userInfo)
+        if(tmpResult){
         cacheRecommendData[user_id]["data"] = tmpResult
         console.log("得到推荐数据,user_id 为 %s,推荐数据为 %d", user_id, tmpResult.length)
-
+        }
     })
 }
 
